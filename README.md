@@ -13,6 +13,8 @@ Have a look at the [examples directory](examples) for some use cases
 
 ## Provider configuration
 - `uri` (string, required): URI of the Schema Registry REST API endpoint. This serves as the base of all requests. Example: `http://localhost:8001`.
+- `api_key` (string, optional): API key to access Confluent Cloud Schema Registry
+- `api_secret` (string, optional): API secret to access Confluent Cloud Schema Registry
 
 &nbsp;
 
