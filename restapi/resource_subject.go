@@ -26,19 +26,18 @@ func resourceSubject() *schema.Resource {
 }
 
 func resourceSubjectCreate(d *schema.ResourceData, m interface{}) error {
-  client, err := make_client(d, m)
-
-  if err != nil { return err }
+  client := m.(*schemaRegistryClient)
+  subject, schema := d.Get("subject").(string), d.Get("schema").(string)
 
   log.Printf("Create subject '%s'.", client)
 
-  err = client.create_subject()
+  err := client.createSubject(subject, schema)
 
   if err != nil {
     return err
   }
 
-  d.SetId(client.subject)
+  d.SetId(subject)
   return nil
 }
 
@@ -47,13 +46,12 @@ func resourceSubjectRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceSubjectUpdate(d *schema.ResourceData, m interface{}) error {
-  client, err := make_client(d, m)
-
-  if err != nil { return err }
+  client := m.(*schemaRegistryClient)
+  subject, schema := d.Get("subject").(string), d.Get("schema").(string)
 
   log.Printf("Update subject '%s'.", client)
 
-  err = client.create_subject()
+  err := client.createSubject(subject, schema)
 
   if err != nil {
     return err
@@ -63,13 +61,12 @@ func resourceSubjectUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceSubjectDelete(d *schema.ResourceData, m interface{}) error {
-  client, err := make_client(d, m)
-
-  if err != nil { return err }
+  client := m.(*schemaRegistryClient)
+  subject := d.Get("subject").(string)
 
   log.Printf("Delete subject '%s'.", client)
 
-  err = client.delete_subject()
+  err := client.deleteSubject(subject)
 
   if err != nil {
     return err

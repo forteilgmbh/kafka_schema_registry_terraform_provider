@@ -49,3 +49,7 @@ override.tf.json
 vendor/
 
 terraform-provider-schemaregistry
+
+# InteliJ
+.idea
+*.iml

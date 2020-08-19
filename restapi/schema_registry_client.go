@@ -8,39 +8,47 @@ import (
   "fmt"
 )
 
-type schema_registry_client struct {
-  http_client           *http.Client
-  create_uri            string
-  update_uri            string
-  read_uri              string
-  delete_uri            string
-  subject               string
-  schema                string
+type credentials struct {
+	apiKey    string
+	apiSecret string
 }
 
-func NewSchemaRegistryClient(uri string, subject string, schema string) (*schema_registry_client, error) {
-  client := schema_registry_client{
-    create_uri: uri + "/subjects/" + subject + "/versions",
-    update_uri: uri + "/subjects/" + subject + "/versions",
-    read_uri: uri + "/subjects/" + subject + "/versions",
-    delete_uri: uri + "/subjects/" + subject,
-    subject: subject,
-    schema: schema,
-    http_client: &http.Client{},
+type schemaRegistryClient struct {
+	httpClient  *http.Client
+	createUri   func(string) string
+	deleteUri   func(string) string
+	credentials *credentials
+}
+
+func NewSchemaRegistryClient(uri string, credentials *credentials) (*schemaRegistryClient, error) {
+	client := schemaRegistryClient{
+		createUri:   func(subject string) string { return uri + "/subjects/" + subject + "/versions" },
+		deleteUri:   func(subject string) string { return uri + "/subjects/" + subject },
+		httpClient:  &http.Client{},
+		credentials: credentials,
   }
 
   return &client, nil
 }
 
-func (client schema_registry_client) create_subject() error {
-  jsonData := map[string]string{"schema": client.schema}
+func (client *schemaRegistryClient) createSubject(subject string, schema string) error {
+	jsonData := map[string]string{"schema": schema}
   jsonValue, err := json.Marshal(jsonData)
 
   if err != nil {
     return err
   }
 
-  response, err := http.Post(client.create_uri, "application/vnd.schemaregistry.v1+json", bytes.NewBuffer(jsonValue))
+	req, err := http.NewRequest("POST", client.createUri(subject), bytes.NewBuffer(jsonValue))
+	if err != nil {
+		return err
+	}
+	if client.credentials != nil {
+		req.SetBasicAuth(client.credentials.apiKey, client.credentials.apiSecret)
+	}
+	req.Header.Set("Content-Type", "application/vnd.schemaregistry.v1+json")
+
+	response, err := client.httpClient.Do(req)
 
   if err != nil {
     return err
@@ -60,14 +68,18 @@ func (client schema_registry_client) create_subject() error {
   return nil
 }
 
-func (client schema_registry_client) delete_subject() error {
-  request, err := http.NewRequest("DELETE", client.delete_uri, nil)
+func (client *schemaRegistryClient) deleteSubject(subject string) error {
+	request, err := http.NewRequest("DELETE", client.deleteUri(subject), nil)
 
   if err != nil {
     return err
   }
 
-  response, err := client.http_client.Do(request)
+	if client.credentials != nil {
+		request.SetBasicAuth(client.credentials.apiKey, client.credentials.apiSecret)
+  }
+
+	response, err := client.httpClient.Do(request)
 
   if err != nil {
     return err
