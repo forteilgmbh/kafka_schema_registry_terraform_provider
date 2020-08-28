@@ -22,7 +22,12 @@ Have a look at the [examples directory](examples) for some use cases
 - `subject` (string, required): The name of the subject to be created.
 - `schema` (string, required): The schema of the subject that has to be created.
 
-&nbsp;
+## `schemaregistry_remote_schema` data source configuration
+- `url`: (string, required): URL to a remote zip file
+- `path`: (string, required): Path to schema file inside zip file
+- `value`: (string, computed): Contents of the schema file
+
+Each distinct zip file will be downloaded only once. 
 
 ## Installation
 

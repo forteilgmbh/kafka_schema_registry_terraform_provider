@@ -13,13 +13,14 @@ func resourceSubject() *schema.Resource {
     Delete: resourceSubjectDelete,
 
     Schema: map[string]*schema.Schema{
-      "subject": &schema.Schema{
+      "subject": {
         Type:     schema.TypeString,
         Required: true,
       },
-      "schema": &schema.Schema{
+      "schema": {
         Type:     schema.TypeString,
         Required: true,
+        DiffSuppressFunc: suppressEquivalentJsonDiffs,
       },
     },
   }
@@ -38,11 +39,17 @@ func resourceSubjectCreate(d *schema.ResourceData, m interface{}) error {
   }
 
   d.SetId(subject)
-  return nil
+  return resourceSubjectRead(d, m)
 }
 
 func resourceSubjectRead(d *schema.ResourceData, m interface{}) error {
-  return nil
+  client := m.(*schemaRegistryClient)
+  subject := d.Get("subject").(string)
+  s, err := client.readSubjectSchema(subject)
+  if err != nil {
+    return err
+  }
+  return d.Set("schema", s)
 }
 
 func resourceSubjectUpdate(d *schema.ResourceData, m interface{}) error {
@@ -57,7 +64,7 @@ func resourceSubjectUpdate(d *schema.ResourceData, m interface{}) error {
     return err
   }
 
-  return nil
+  return resourceSubjectRead(d, m)
 }
 
 func resourceSubjectDelete(d *schema.ResourceData, m interface{}) error {

@@ -1,4 +1,4 @@
-NEXT_PROVIDER_VERSION=1.1.1
+NEXT_PROVIDER_VERSION=1.2.0
 
 openbsd_amd64:
 	CGO_ENABLED=0 GOOS=openbsd GOARCH=amd64 go build -o terraform-provider-schemaregistry_v$(NEXT_PROVIDER_VERSION)

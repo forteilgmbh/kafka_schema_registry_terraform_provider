@@ -27,6 +27,9 @@ func Provider() *schema.Provider {
     ResourcesMap: map[string]*schema.Resource{
       "schemaregistry_subject": resourceSubject(),
     },
+    DataSourcesMap: map[string]*schema.Resource{
+      "schemaregistry_remote_schema": dataSourceRemoteSchema(),
+    },
     ConfigureFunc: configureProvider,
   }
 }
