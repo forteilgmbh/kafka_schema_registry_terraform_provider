@@ -3,13 +3,14 @@ package remote_schema_provider
 
 import (
   "fmt"
+  "net/http"
   "sync"
 )
 
 // RemoteSchemaProvider provides access to remote schema files
 type RemoteSchemaProvider interface {
   // GetZippedSchema returns raw contents of a schema file located under `path` inside a zip file from `url` remote
-  GetZippedSchema(url string, path string) (string, error)
+  GetZippedSchema(url string, path string, auth *Auth) (string, error)
 }
 
 // New creates a new instance of RemoteSchemaProvider
@@ -21,12 +22,12 @@ func New() RemoteSchemaProvider {
 
 type remoteSchemaSources map[string]*remoteSchemaSource
 
-func (r remoteSchemaSources) GetZippedSchema(url string, path string) (string, error) {
+func (r remoteSchemaSources) GetZippedSchema(url string, path string, auth *Auth) (string, error) {
   _, ok := r[url]
   if !ok {
     r[url] = &remoteSchemaSource{}
   }
- return r[url].getSchema(url, path)
+ return r[url].getSchema(url, path, auth)
 }
 
 type remoteSchemaSource struct {
@@ -34,7 +35,7 @@ type remoteSchemaSource struct {
   once  sync.Once
 }
 
-func (r *remoteSchemaSource) getSchema(url string, path string) (schema string, err error) {
+func (r *remoteSchemaSource) getSchema(url string, path string, auth *Auth) (schema string, err error) {
   zipName, err := getZipName(url)
   if err != nil {
     return "", err
@@ -42,9 +43,13 @@ func (r *remoteSchemaSource) getSchema(url string, path string) (schema string, 
   dirName := getDirName(zipName)
 
   r.once.Do(func() {
-    err = download(url, zipName)
+    var client *http.Client
+    client, err = auth.getHttpClientWithAuthentication()
     if err == nil {
-      r.paths, err = unzip(zipName, dirName)
+      err = download(url, zipName, client)
+      if err == nil {
+        r.paths, err = unzip(zipName, dirName)
+      }
     }
   })
   if err != nil {

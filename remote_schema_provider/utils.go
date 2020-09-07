@@ -29,13 +29,17 @@ func getDirName(zipName string) string {
   return strings.TrimSuffix(zipName, filepath.Ext(zipName))
 }
 
-func download(url string, dest string) error {
+func download(url string, dest string, client *http.Client) error {
   // Get the data
-  resp, err := http.Get(url)
+  resp, err := client.Get(url)
   if err != nil {
     return err
   }
   defer resp.Body.Close()
+  if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+    respData, _ := ioutil.ReadAll(resp.Body)
+    return fmt.Errorf("get %s\n%s: %s", url, resp.Status, respData)
+  }
 
   // Create the file
   out, err := os.Create(dest)
