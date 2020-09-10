@@ -22,17 +22,22 @@ func resourceSubject() *schema.Resource {
         Required: true,
         DiffSuppressFunc: suppressEquivalentJsonDiffs,
       },
+      "schema_type": {
+        Type: schema.TypeString,
+        Optional: true,
+        Default: "AVRO",
+      },
     },
   }
 }
 
 func resourceSubjectCreate(d *schema.ResourceData, m interface{}) error {
   client := m.(*schemaRegistryClient)
-  subject, schema := d.Get("subject").(string), d.Get("schema").(string)
+  subject, schema, schemaType := d.Get("subject").(string), d.Get("schema").(string), d.Get("schema_type").(string)
 
   log.Printf("Create subject '%s'.", client)
 
-  err := client.createSubject(subject, schema)
+  err := client.createSubject(subject, schema, schemaType)
 
   if err != nil {
     return err
@@ -54,11 +59,11 @@ func resourceSubjectRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceSubjectUpdate(d *schema.ResourceData, m interface{}) error {
   client := m.(*schemaRegistryClient)
-  subject, schema := d.Get("subject").(string), d.Get("schema").(string)
+  subject, schema, schemaType := d.Get("subject").(string), d.Get("schema").(string), d.Get("schema_type").(string)
 
   log.Printf("Update subject '%s'.", client)
 
-  err := client.createSubject(subject, schema)
+  err := client.createSubject(subject, schema, schemaType)
 
   if err != nil {
     return err
