@@ -69,8 +69,8 @@ func (client *schemaRegistryClient) readSubjectSchema(subject string) (string, e
   return string(data[:]), nil
 }
 
-func (client *schemaRegistryClient) createSubject(subject string, schema string) error {
-	jsonData := map[string]string{"schema": schema}
+func (client *schemaRegistryClient) createSubject(subject string, schema string, schemaType string) error {
+	jsonData := map[string]string{"schema": schema, "schemaType": schemaType}
   jsonValue, err := json.Marshal(jsonData)
 
   if err != nil {
