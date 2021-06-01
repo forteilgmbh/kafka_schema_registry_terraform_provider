@@ -15,19 +15,37 @@ type RemoteSchemaProvider interface {
 
 // New creates a new instance of RemoteSchemaProvider
 func New() RemoteSchemaProvider {
-  var r remoteSchemaSources
-  r = make(map[string]*remoteSchemaSource)
-  return r
+  return &remoteSchemaSources{
+    make(map[string]*remoteSchemaSource),
+    sync.RWMutex{},
+  }
 }
 
-type remoteSchemaSources map[string]*remoteSchemaSource
+type remoteSchemaSources struct {
+  sources map[string]*remoteSchemaSource
+  lock    sync.RWMutex
+}
 
-func (r remoteSchemaSources) GetZippedSchema(url string, path string, auth *Auth) (string, error) {
-  _, ok := r[url]
+func (r *remoteSchemaSources) readSource(url string) (*remoteSchemaSource, bool) {
+  r.lock.RLock()
+  defer r.lock.RUnlock()
+  s, ok := r.sources[url]
+  return s, ok
+}
+
+func (r *remoteSchemaSources) writeSource(url string, source *remoteSchemaSource) {
+  r.lock.Lock()
+  defer r.lock.Unlock()
+  r.sources[url] = source
+}
+
+func (r *remoteSchemaSources) GetZippedSchema(url string, path string, auth *Auth) (string, error) {
+  _, ok := r.readSource(url)
   if !ok {
-    r[url] = &remoteSchemaSource{}
+    r.writeSource(url, &remoteSchemaSource{})
   }
- return r[url].getSchema(url, path, auth)
+  s, _ := r.readSource(url)
+  return s.getSchema(url, path, auth)
 }
 
 type remoteSchemaSource struct {
